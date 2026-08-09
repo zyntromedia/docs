@@ -1,4 +1,4 @@
-# Test coverage reports
+/*# Test coverage reports
 .coverage/
 
 # macOS system files
@@ -111,3 +111,5 @@ translations/
 .local
 docs-ghes-3.14/
 docs-ghes-3.15/
+
+*/
