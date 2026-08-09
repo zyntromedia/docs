@@ -1,3 +1,4 @@
+/*
 .devcontainer/
 .git/
 .github/
@@ -8,3 +9,4 @@ docs-early-access/
 node_modules/
 README.md
 tests/
+*/
