@@ -1,0 +1,234 @@
+claude_documentation_guidelines:
+  overview:
+    title: "Best Practices for Integrating Claude into Documentation Workflows"
+    description: "Guidelines for Claude users learning to work effectively with GitHub Docs, including generating drafts, reviewing content, maintaining consistency, and ensuring quality."
+    audience: "Claude users collaborating on documentation for docs.github.com"
+    last_updated: "2026-09-02"
+
+  generating_documentation_drafts:
+    title: "Generating Documentation Drafts with Claude"
+    sections:
+      - heading: "Provide clear context and requirements"
+        guidelines:
+          - "Include the intended audience (e.g., enterprise admins, open source maintainers, beginners)."
+          - "Specify the content type: conceptual (what and why), procedural (how-to steps), or reference (lookup information)."
+          - "Reference existing similar articles in docs.github.com to match style and structure."
+          - "Include any relevant links to related documentation that should be referenced."
+          - "Specify the product version or feature scope (e.g., GitHub Free, GitHub Enterprise Server, GitHub.com)."
+
+      - heading: "Structure your draft prompts"
+        guidelines:
+          - "Start with the article title and main topic."
+          - "Provide an intro that leads with value to the reader, not a restatement of the title."
+          - "Request specific sections: prerequisites, step-by-step instructions, examples, troubleshooting."
+          - "Ask Claude to follow the GitHub Docs style guide: clear language, active voice, plain English."
+          - "Request use of tables for complex data and bullet lists for sets of items."
+
+      - heading: "Focus on the reader's goal"
+        guidelines:
+          - "Frame the article around what readers are trying to accomplish, not the product feature."
+          - "Example: 'Securing your repository with branch protection rules' instead of 'Understanding branch protection'."
+          - "Request that Claude prioritize essential content and trim unnecessary detail."
+          - "Ask for action-oriented advice paired with concrete steps (not theory alone)."
+
+      - heading: "Request proper formatting"
+        guidelines:
+          - "Ask Claude to use Markdown syntax compatible with docs.github.com."
+          - "Specify sentence casing for headers and proper header hierarchy (start at H2, no skipped levels)."
+          - "Request numbered lists for procedures, bullet lists for sets."
+          - "Ask for code blocks with language specified (e.g., ` ```shell `) and placeholders in ALL CAPS."
+          - "Request that code examples avoid command prompts and comment out output if shown."
+
+  ai_assisted_content_review:
+    title: "AI-Assisted Content Review and Editing"
+    sections:
+      - heading: "Review drafts for accuracy"
+        guidelines:
+          - "Check that all technical information is accurate and matches the current GitHub product."
+          - "Verify that procedure steps are complete and in the correct order."
+          - "Ensure code examples run without errors and use current APIs/syntax."
+          - "Confirm links to internal documentation are valid and point to the correct version."
+          - "Cross-check feature references against the feature flags in data/features/."
+
+      - heading: "Ensure reader focus"
+        guidelines:
+          - "Verify the intro leads with value and the reader's benefit, not just a restatement of the title."
+          - "Check that the article serves one clear purpose for one reader scenario."
+          - "Confirm procedural articles focus on what readers will do, not just what exists."
+          - "Remove content that serves edge cases rather than the primary audience."
+          - "Ask Claude to flag any 'just in case' links or unnecessary context."
+
+      - heading: "Improve clarity and scannability"
+        guidelines:
+          - "Ensure paragraphs are 1–3 sentences and use generous white space."
+          - "Verify headers are unique at the same level and descriptive."
+          - "Check that alerts are minimal (typically one per article) and concise."
+          - "Confirm sentences use active voice and definitive verbs (not 'may', 'might', 'should')."
+          - "Ask Claude to simplify complex sentences and remove jargon."
+
+      - heading: "Use Claude for consistency checks"
+        guidelines:
+          - "Ask Claude to compare the draft against similar existing articles for tone, structure, and formatting."
+          - "Request checks for consistent terminology (e.g., 'pull request' vs. 'PR', 'organization' vs. 'org')."
+          - "Have Claude verify product names use the correct variables (e.g., {% data variables.product.prodname_copilot %})."
+          - "Ask Claude to flag any deviations from the GitHub Docs style guide."
+
+  maintaining_consistency:
+    title: "Maintaining Documentation Consistency with Claude"
+    sections:
+      - heading: "Follow established patterns"
+        guidelines:
+          - "Ask Claude to match the structure of existing docs in the same category."
+          - "Request that procedural articles follow the standard: prerequisites → steps → examples → troubleshooting."
+          - "Ensure conceptual articles follow the standard: intro → explanation → why it matters → next steps."
+          - "Ask Claude to use the same terminology and phrasing as related articles."
+
+      - heading: "Apply style guide rules"
+        guidelines:
+          - "Provide Claude with the relevant excerpts from `.github/instructions/style-guide-summary.instructions.md`."
+          - "Request compliance with voice and tone: clear, simple, active voice, no jargon."
+          - "Ask Claude to follow header rules: sentence casing, start at H2, no skipped levels."
+          - "Request that code blocks specify the language and follow character limits to avoid horizontal scrolling."
+
+      - heading: "Use reusables and variables"
+        guidelines:
+          - "Ask Claude to identify where reusable content can replace repeated prose (see data/reusables/)."
+          - "Request that Claude use product variables instead of hardcoded product names (e.g., {% data variables.product.prodname_github %})."
+          - "Have Claude flag opportunities to link to existing reusables for consistency."
+
+      - heading: "Version considerations"
+        guidelines:
+          - "Ask Claude to specify which product versions the content applies to."
+          - "Request Liquid versioning tags ({% ifversion %}) when content differs by version."
+          - "Confirm that content does not duplicate version-specific information unnecessarily."
+
+  quality_standards:
+    title: "Best Practices for AI-Generated Content Quality"
+    sections:
+      - heading: "Accuracy and completeness"
+        guidelines:
+          - "Always verify technical accuracy: Claude can occasionally generate plausible but incorrect information."
+          - "Check that all steps are complete and there are no missing prerequisites."
+          - "Ensure all examples are tested and runnable."
+          - "Confirm that links are current and that referenced features exist in the stated versions."
+          - "Have a subject matter expert (SME) review content about complex or mission-critical topics."
+
+      - heading: "Actionability"
+        guidelines:
+          - "Ensure every piece of advice includes concrete next steps, not theory alone."
+          - "Request that Claude pair best practices with how-to guidance."
+          - "Verify that examples are realistic and reflect actual use cases."
+          - "Confirm that troubleshooting sections address common problems with solutions."
+
+      - heading: "Simplicity and scannability"
+        guidelines:
+          - "Ask Claude to remove unnecessary context and keep content ruthlessly concise."
+          - "Request short paragraphs (1–3 sentences) and generous white space."
+          - "Verify tables are used only for genuinely complex data, not to repeat information."
+          - "Ensure alerts are essential (not 'nice to know') and kept to one per article."
+
+      - heading: "Reader-first approach"
+        guidelines:
+          - "Confirm that the content is written for one clear reader scenario, not multiple audiences."
+          - "Ensure the intro pulls the reader in with value, not a feature description."
+          - "Verify that the article answers 'Why should I care?' before diving into details."
+          - "Check that CTAs (if included) genuinely help the reader and are placed near task completion."
+
+  workflow_recommendations:
+    title: "Recommended Claude Workflow for Docs Content"
+    steps:
+      - step: 1
+        task: "Plan the content"
+        actions:
+          - "Define the audience, content type, and reader's goal."
+          - "Identify where this fits in the existing documentation structure."
+          - "List any required topics, examples, or links."
+
+      - step: 2
+        task: "Generate a draft"
+        actions:
+          - "Use Claude with clear context, requirements, and references to similar docs."
+          - "Request proper Markdown formatting and GitHub Docs style compliance."
+          - "Ask for section headers, examples, and a clear intro."
+
+      - step: 3
+        task: "Review for accuracy"
+        actions:
+          - "Verify all technical information against current product docs."
+          - "Test code examples and confirm procedures work end-to-end."
+          - "Check links and verify feature availability in stated versions."
+
+      - step: 4
+        task: "Review for style and consistency"
+        actions:
+          - "Compare against similar existing articles for tone and structure."
+          - "Use Claude to check for style guide compliance and suggest improvements."
+          - "Verify terminology matches related docs and product names use variables."
+
+      - step: 5
+        task: "Iterate and refine"
+        actions:
+          - "Have Claude make targeted edits based on review feedback."
+          - "Request simplifications, clarity improvements, or restructuring."
+          - "Ask Claude to explain any changes it makes."
+
+      - step: 6
+        task: "Final SME review"
+        actions:
+          - "Have a subject matter expert (engineer, product manager) review for accuracy."
+          - "Incorporate SME feedback and make final edits."
+          - "Confirm the content is ready for publication."
+
+  common_pitfalls:
+    title: "Common Pitfalls to Avoid"
+    pitfalls:
+      - pitfall: "Accepting Claude output without verification"
+        solution: "Always verify technical accuracy, test examples, and validate information against current product documentation."
+
+      - pitfall: "Including too much context or edge-case information"
+        solution: "Ask Claude to ruthlessly trim non-essential content and focus on the primary reader scenario and use case."
+
+      - pitfall: "Writing for multiple audiences"
+        solution: "Choose one clear reader scenario (e.g., 'enterprise admin' or 'open source maintainer') and write for them. Other readers can adapt the guidance."
+
+      - pitfall: "Using marketing language or jargon"
+        solution: "Request clear, plain English with active voice. Avoid buzzwords, inflated adjectives, and technical jargon without explanation."
+
+      - pitfall: "Failing to follow style guide conventions"
+        solution: "Provide Claude with relevant style guide excerpts and ask it to verify compliance with headers, code blocks, alerts, and voice/tone rules."
+
+      - pitfall: "Duplicating existing content"
+        solution: "Check if reusable content already exists in data/reusables/ or similar articles. Ask Claude to use or link to existing docs instead."
+
+      - pitfall: "Not updating links and variable references"
+        solution: "Verify all links are current and use product variables (e.g., {% data variables.product.prodname_copilot %}) instead of hardcoded names."
+
+      - pitfall: "Skipping SME review for complex topics"
+        solution: "Have engineers or product managers review content about APIs, security features, and mission-critical workflows before publication."
+
+  resources:
+    title: "Related Resources"
+    items:
+      - name: "Content guidelines"
+        path: ".github/instructions/content-guidelines.instructions.md"
+        description: "Strategic content rules: what to write and how to focus an article."
+
+      - name: "Style guide summary"
+        path: ".github/instructions/style-guide-summary.instructions.md"
+        description: "Concise style guide: voice, tone, headers, code blocks, alerts."
+
+      - name: "Content instructions"
+        path: ".github/instructions/content.instructions.md"
+        description: "Detailed rules for Markdown, Liquid, links, and content structure."
+
+      - name: "Reusables"
+        path: "data/reusables/"
+        description: "Long strings of reusable text to maintain consistency."
+
+      - name: "Variables"
+        path: "data/variables/"
+        description: "Short strings of reusable text and product names."
+
+      - name: "Features"
+        path: "data/features/"
+        description: "Feature flags for version-based content branching."
