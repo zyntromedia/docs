@@ -1,1 +1,41 @@
 release_asset_limit: '1000'
+# ==============================================
+# Releases & Assets Variables — v2.0
+# Source: GitHub Docs • Maintained: zyntromedia
+# ==============================================
+
+# 🔹 Asset Limits & Sizes
+release_asset_limit: '1000'
+release_asset_per_upload_limit: '50'
+release_asset_max_size: '2 GB'
+release_asset_max_size_text: '2 gigabytes'
+
+# 🔹 Release Types
+release_type_draft: 'draft release'
+release_type_pre: 'pre-release'
+release_type_latest: 'latest release'
+release_type_stable: 'stable release'
+
+# 🔹 Release Channels
+release_channel_recommended: 'recommended release'
+release_channel_lts: 'long-term support (LTS) release'
+
+# 🔹 Actions & Status
+release_action_create: 'create a release'
+release_action_edit: 'edit a release'
+release_action_delete: 'delete a release'
+release_action_publish: 'publish a release'
+release_action_prerelease: 'mark as pre-release'
+release_action_latest: 'set as latest release'
+
+# 🔹 Tags & Versioning
+release_tag_prefix: 'v'
+release_version_format: 'Semantic Versioning'
+release_version_example: 'v1.2.3'
+
+# 🔹 Notes & Documentation
+release_notes: 'release notes'
+release_changelog: 'changelog'
+release_assets: 'release assets'
+release_binary: 'binary file'
+release_package: 'package file'
