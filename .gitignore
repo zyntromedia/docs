@@ -3,7 +3,7 @@
 
 # macOS system files
 .DS_Store
-
+node_modules
 # Environment variables (contains secrets)
 .env
 
