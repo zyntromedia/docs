@@ -243,7 +243,7 @@
     "mdast-util-to-markdown": "2.1.2",
     "mdast-util-to-string": "^4.0.0",
     "micromark-extension-gfm": "^3.0.0",
-    "next": "^16.3.4",
+    "next": "^16.3.8",
     "ora": "^9.3.0",
     "parse5": "8.0.1",
     "quick-lru": "7.0.1",
@@ -262,7 +262,7 @@
     "remark-remove-comments": "^1.1.1",
     "remark-stringify": "^11.0.0",
     "semver": "^7.7.4",
-    "sharp": "0.35.4",
+    "sharp": "0.35.5",
     "slash": "^5.1.0",
     "strip-ansi": "7.1.0",
     "swr": "^2.4.0",
@@ -282,7 +282,7 @@
     "@eslint/js": "^9.39.3",
     "@github/markdownlint-github": "^0.6.3",
     "@graphql-inspector/core": "^7.1.2",
-    "@graphql-tools/load": "^8.1.8",
+    "@graphql-tools/load": "^8.1.19",
     "@octokit/rest": "22.0.0",
     "@playwright/test": "^1.60.0",
     "@types/accept-language-parser": "1.5.7",
@@ -367,7 +367,7 @@
     "minimatch@10": {
       "brace-expansion": "^5.0.8"
     },
-    "fast-uri": "^3.1.7"
+    "fast-uri": "^3.1.8"
   },
   "optionalDependencies": {
     "esm": "^3.2.25"
