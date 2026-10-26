@@ -1,0 +1,192 @@
+DevSecOps
+
+# DevSecOps
+
+**DevSecOps** คือการฝัง security เข้าไปในทุก stage ของ SDLC แบบ **shift-left + automation** — ให้ pipeline เป็นคนจับ vulnerability ก่อน attacker หรือ human audit [3875][3879][3888]
+
+## Security Pipeline
+
+```text
+Commit → Secret Scan → SAST → SCA → Build → Container Scan → IaC Scan → DAST → Deploy → Runtime
+```
+
+| Stage | Control |
+|---|---|
+| **Commit** [3875][3880] | Secret scan [3875][3880] |
+| **Build** [3875][3880] | SAST + SCA [3875][3880] |
+| **Image** [3876][3880] | Container scan [3876][3880] |
+| **Infra** [3875][3880] | IaC scan [3875][3880] |
+| **Runtime** [3875][3880] | DAST + monitor [3875][3880] |
+
+ใช้ pipeline นี้เพื่อ shift-left [3875][3880][3888]
+
+## Threat Modeling
+
+```text
+Decompose → Threats → Rank → Mitigate
+```
+
+| Step | ใช้ทำอะไร |
+|---|---|
+| **Decompose** [3883][3877] | แยก component [3883][3877] |
+| **Threats** [3883][3877] | หา risk [3883][3877] |
+| **Rank** [3883][3877] | จัดลำดับ [3883][3877] |
+| **Mitigate** [3883][3877] | แก้ [3883][3877] |
+
+ใช้ threat model ก่อน build [3883][3877][3878]
+
+## Secrets Management
+
+```yaml
+secrets:
+  - "vault"
+  - "aws_secrets_manager"
+  - "short_lived"
+```
+
+| หลักการ | ใช้ทำอะไร |
+|---|---|
+| **No secret in code** [3875][3883] | กัน leak [3875][3883] |
+| **Secret manager** [3823][3887] | Centralize [3823][3887] |
+| **Short-lived** [3823][3887] | ลด window [3823][3887] |
+| **Rotate** [3823][3887] | กัน reuse [3823][3887] |
+
+ใช้ secrets เพื่อ credential [3823][3875][3887]
+
+## SAST
+
+```bash
+semgrep --config auto .
+```
+
+| หลักการ | ใช้ทำอะไร |
+|---|---|
+| **Static** [3875][3880] | สแกน code [3875][3880] |
+| **Pre-merge** [3875][3880] | กัน regression [3875][3880] |
+| **Custom rule** [3875][3880] | Org policy [3875][3880] |
+| **IDE plugin** [3882][3875] | Shift-left [3882][3875] |
+
+ใช้ SAST เพื่อ code security [3875][3880][3882]
+
+## SCA
+
+```bash
+snyk test
+```
+
+| หลักการ | ใช้ทำอะไร |
+|---|---|
+| **Dependency** [3875][3881] | หา CVE [3875][3881] |
+| **License** [3881][3887] | Compliance [3881][3887] |
+| **Lockfile** [3881][3887] | Reproducible [3881][3887] |
+| **Auto-update** [3881][3887] | Patch [3881][3887] |
+
+ใช้ SCA เพื่อ supply chain [3875][3881][3887]
+
+## Container Security
+
+```bash
+trivy image app:1.0
+syft app:1.0 -o cyclonedx-json > sbom.json
+cosign sign app:1.0
+```
+
+| หลักการ | ใช้ทำอะไร |
+|---|---|
+| **Scan** [3876][3880] | หา CVE [3876][3880] |
+| **SBOM** [3876][3880] | Inventory [3876][3880] |
+| **Sign** [3876][3880] | Provenance [3876][3880] |
+| **Admission** [3876][3880] | กัน unsigned [3876][3880] |
+
+ใช้ container security เพื่อ runtime [3876][3880][3877]
+
+## IaC Scanning
+
+```bash
+checkov -d terraform/
+```
+
+| หลักการ | ใช้ทำอะไร |
+|---|---|
+| **Misconfig** [3875][3880] | หา misconfig [3875][3880] |
+| **Policy as code** [3875][3880] | Enforce [3875][3880] |
+| **Pre-deploy** [3875][3880] | กัน breach [3875][3880] |
+| **Drift detect** [3875][3880] | กัน drift [3875][3880] |
+
+ใช้ IaC scan เพื่อ infra [3875][3880][3888]
+
+## DAST
+
+```bash
+zap-baseline.py -t https://staging.example.com
+```
+
+| หลักการ | ใช้ทำอะไร |
+|---|---|
+| **Dynamic** [3875][3880] | ทดสอบ runtime [3875][3880] |
+| **Staging** [3875][3880] | ปลอดภัย [3875][3880] |
+| **API test** [3875][3880] | Contract [3875][3880] |
+| **Auth scan** [3875][3880] | Session [3875][3880] |
+
+ใช้ DAST เพื่อ runtime [3875][3880][3888]
+
+## Best Practices
+
+1. **ใช้ shift-left** [3875][3879][3882]
+2. **ใช้ secret scan** [3875][3880][3885]
+3. **ใช้ SAST + SCA** [3875][3880][3881]
+4. **ใช้ container scan** [3876][3880][3877]
+5. **ใช้ IaC scan** [3875][3880][3888]
+6. **ใช้ DAST** [3875][3880][3888]
+7. **ใช้ SBOM + sign** [3876][3880][3877]
+8. **ใช้ policy as code** [3875][3880][3885]
+9. **ใช้ runtime monitor** [3875][3880][3888]
+10. **ทบทวน security เป็นรอบ** [3875][3879][3880]
+
+## Anti-Patterns
+
+| Anti-pattern | ปัญหา | ทางแก้ |
+|---|---|---|
+| Security ท้ายสาย | แพง [3875][3879] | Shift-left |
+| Secret in code | Leak [3875][3883] | ใช้ manager |
+| ไม่มี SCA | CVE [3875][3881] | เพิ่ม SCA |
+| ไม่มี IaC scan | Misconfig [3875][3880] | เพิ่ม scan |
+| ไม่มี DAST | Runtime vuln [3875][3880] | เพิ่ม DAST |
+
+## Checklist
+
+- [ ] มี threat model
+- [ ] มี secret scan
+- [ ] มี SAST
+- [ ] มี SCA
+- [ ] มี container scan
+- [ ] มี IaC scan
+- [ ] มี DAST
+- [ ] มี SBOM
+- [ ] มี policy as code
+- [ ] ทบทวน security
+
+## Related Notes
+
+- [[MOC - Platform Engineering]]
+- [[Secure Coding]]
+- [[CI/CD]]
+- [[Container Images]]
+- [[MOC - Obsidian]]
+
+การอ้างอิง:
+[1] owasp.github.io › DevSecOpsGuidelineOWASP DevSecOps Guideline https://owasp.github.io/DevSecOpsGuideline/
+[2] Container Scanning - OWASP DevSecOps Guideline https://owasp.github.io/DevSecOpsGuideline/2-Process/2-3-Build/2-3-3-Container-Security/2-3-3-1-Container-Scanning/
+[3] Overview - OWASP DevSecOps Guideline https://owasp.github.io/DevSecOpsGuideline/0-Intro/0-2-Overview/
+[4] OWASP DevSecOps Guideline - v-0.2 | OWASP Foundation https://owasp.github.io/www-project-devsecops-guideline/latest/index
+[5] devguide.owasp.org › en › 09-operationsDevSecOps Guideline - OWASP Developer Guide https://devguide.owasp.org/en/09-operations/01-devsecops/
+[6] DevSecOps Fundamentals https://web.cecs.pdx.edu/~dmcgrath/courses/Su26/secdevops/devsecops-fundamentals.html
+[7] SCA - OWASP DevSecOps Guideline - v-0.2 | OWASP Foundation https://owasp.github.io/www-project-devsecops-guideline/latest/02d-Software-Composition-Analysis
+[8] DevSecOps on Azure Kubernetes Service (AKS) - Azure Architecture Center https://learn.microsoft.com/en-us/azure/architecture/guide/devsecops/devsecops-on-aks
+[9] Developer Guide https://owasp.github.io/www-project-developer-guide/assets/exports/OWASP_Developer_Guide.pdf
+[10] devguide.owasp.org › 02-secure-developmentSecure development and integration - OWASP Developer Guide https://devguide.owasp.org/en/02-foundations/02-secure-development/
+[11] Shift-Left Security in DevSecOps: 5 Ways to Secure CI/CD - Cloud4C https://www.cloud4c.com/blogs/shift-left-security-devsecops-explained
+[12] DevSecOps: Integrating security into CI/CD pipelines - aware7 https://a7.de/en/wiki/devsecops-integrating-security-into-cicd-pipelines/
+[13] TheUltimateDevOpsBible-ZeroToHero/DevSecOps/overview.md at main · farhanashrafdev/TheUltimateDevOpsBible-ZeroToHero https://github.com/farhanashrafdev/TheUltimateDevOpsBible-ZeroToHero/blob/main/DevSecOps/overview.md
+[14] inventivehq.com › blog › devsecops-pipeline-guideDevSecOps Pipeline: How to Build Security into CI/CD https://inventivehq.com/blog/devsecops-pipeline-guide
+[15] Siva M's Post https://www.linkedin.com/posts/siva-m-508722108_devsecops-devops-sast-activity-7297271693956300800-cdoO
