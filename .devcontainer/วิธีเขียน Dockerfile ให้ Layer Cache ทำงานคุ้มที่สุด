@@ -1,0 +1,216 @@
+วิธีเขียน Dockerfile ให้ Layer Cache ทำงานคุ้มที่สุด
+
+# วิธีเขียน Dockerfile ให้ Layer Cache ทำงานคุ้มที่สุด
+
+หัวใจคือ **เรียง instruction จาก “เปลี่ยนน้อย → เปลี่ยนบ่อย”** แล้วแยก **dependency install** ออกจาก **source code** — เพราะเมื่อ layer ใด cache พัง layer ทุกอันหลังจากนั้นจะถูก rebuild ด้วย [3847][3850][3852]
+
+## หลักการสำคัญ
+
+```text
+Base → System deps → Dependency manifest → Install deps → Source code → CMD
+```
+
+| หลักการ | ทำไม |
+|---|---|
+| **Order by change frequency** [3847][3850] | ลด rebuild [3847][3850] |
+| **Lockfile ก่อน source** [3847][3848] | Cache dep ได้ [3847][3848] |
+| **COPY เฉพาะที่จำเป็น** [3846][3847] | ไม่ invalidates ง่าย [3846][3847] |
+| **Multi-stage** [3849][3846] | แยก build/runtime [3849][3846] |
+| **Cache mount** [3847][3853] | เร็วขึ้น [3847][3853] |
+
+ใช้หลักการนี้เพื่อ optimize [3847][3850][3846]
+
+## ตัวอย่าง: Node.js
+
+```dockerfile
+FROM node:22-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
+FROM node:22-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/dist ./dist
+COPY --from=deps /app/node_modules ./node_modules
+USER node
+CMD ["node", "dist/index.js"]
+```
+
+ใช้ pattern นี้เพื่อ cache deps [3847][3848][3855]
+
+## ตัวอย่าง: Python
+
+```dockerfile
+FROM python:3.12-slim AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --prefix=/install -r requirements.txt
+
+FROM python:3.12-slim
+WORKDIR /app
+COPY --from=builder /install /usr/local
+COPY . .
+RUN useradd -m appuser
+USER appuser
+CMD ["python", "-m", "app"]
+```
+
+ใช้ pattern นี้เพื่อ cache pip [3847][3855][3846]
+
+## ตัวอย่าง: Go
+
+```dockerfile
+FROM golang:1.23 AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+COPY . .
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go build -o app .
+
+FROM gcr.io/distroless/static
+COPY --from=builder /app/app /app
+ENTRYPOINT ["/app"]
+```
+
+ใช้ pattern นี้เพื่อ cache go mod [3847][3855][3846]
+
+## Cache Mount
+
+```dockerfile
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+```
+
+| Package Manager | Cache Path |
+|---|---|
+| **npm** [3855][3857] | /root/.npm [3855][3857] |
+| **pip** [3855][3857] | /root/.cache/pip [3855][3857] |
+| **go** [3855][3857] | /go/pkg/mod [3855][3857] |
+| **cargo** [3855][3857] | /usr/local/cargo/registry [3855][3857] |
+
+ใช้ cache mount เพื่อ speed [3847][3853][3855]
+
+## COPY อย่างไรให้คุ้ม
+
+```dockerfile
+# ไม่ดี
+COPY . .
+
+# ดี
+COPY src ./src
+COPY public ./public
+```
+
+| หลักการ | ใช้ทำอะไร |
+|---|---|
+| **Specific COPY** [3846][3847] | Cache ดีขึ้น [3846][3847] |
+| **.dockerignore** [3846][3847] | ลด context [3846][3847] |
+| **--link** [3853][3847] | ลด invalidation [3853][3847] |
+| **Bind mount** [3847][3846] | ไม่สร้าง layer [3847][3846] |
+
+ใช้ COPY แบบ specific [3846][3847][3853]
+
+## .dockerignore
+
+```text
+node_modules
+.git
+dist
+*.log
+.env
+```
+
+| หลักการ | ใช้ทำอะไร |
+|---|---|
+| **Exclude junk** [3846][3847] | Context เล็ก [3846][3847] |
+| **Exclude secret** [3846][3847] | Security [3846][3847] |
+| **Exclude build output** [3846][3847] | Cache ดี [3846][3847] |
+
+ใช้ .dockerignore เพื่อ context [3846][3847][3853]
+
+## CI Cache
+
+```yaml
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .docker-cache
+```
+
+| หลักการ | ใช้ทำอะไร |
+|---|---|
+| **Remote cache** [3847][3854] | แชร์ cache [3847][3854] |
+| **Cache key** [3847][3854] | จัดการ [3847][3854] |
+| **BuildKit** [3847][3853] | Cache mount [3847][3853] |
+
+ใช้ CI cache เพื่อ speed [3847][3854][3853]
+
+## Best Practices
+
+1. **ใช้ order จากน้อยไปบ่อย** [3847][3850][3846]
+2. **ใช้ lockfile ก่อน source** [3847][3848][3855]
+3. **ใช้ cache mount** [3847][3853][3855]
+4. **ใช้ multi-stage** [3849][3846][3847]
+5. **ใช้ COPY specific** [3846][3847][3853]
+6. **ใช้ .dockerignore** [3846][3847][3853]
+7. **ใช้ --link** [3853][3847][3846]
+8. **ใช้ bind mount** [3847][3846][3853]
+9. **ใช้ CI cache** [3847][3854][3853]
+10. **ทบทวน Dockerfile เป็นรอบ** [3847][3850][3846]
+
+## Anti-Patterns
+
+| Anti-pattern | ปัญหา | ทางแก้ |
+|---|---|---|
+| COPY . . ก่อน install | Cache พัง [3847][3848] | แยก lockfile |
+| ใช้ latest | Drift [3831][3833] | Pin digest |
+| ไม่มี .dockerignore | Context ใหญ่ [3846][3847] | เพิ่ม ignore |
+| ไม่มี cache mount | Download ซ้ำ [3847][3855] | เพิ่ม mount |
+| ไม่มี multi-stage | Image ใหญ่ [3849][3846] | เพิ่ม stage |
+
+## Checklist
+
+- [ ] มี order ถูก
+- [ ] มี lockfile ก่อน source
+- [ ] มี cache mount
+- [ ] มี multi-stage
+- [ ] มี COPY specific
+- [ ] มี .dockerignore
+- [ ] มี --link
+- [ ] มี CI cache
+- [ ] ทบทวน Dockerfile
+
+## Related Notes
+
+- [[MOC - Platform Engineering]]
+- [[Container Images]]
+- [[Docker Compose]]
+- [[CI/CD]]
+- [[MOC - Obsidian]]
+
+การอ้างอิง:
+[1] www.docker.com › blog › intro-guide-to-docIntro Guide to Dockerfile Best Practices | Docker https://www.docker.com/blog/intro-guide-to-dockerfile-best-practices/
+[2] docs.docker.com › build › cacheDocker Documentation https://docs.docker.com/build/cache/optimize.md
+[3] docs.docker.com › using-the-build-cacheDocker Documentation https://docs.docker.com/get-started/docker-concepts/building-images/using-the-build-cache.md
+[4] Multi-stage builds https://docs.docker.com/build/building/multi-stage/
+[5] Docker Documentation https://docs.docker.com/build/cache/invalidation.md
+[6] Caching | Buildkite Documentation https://buildkite.com/docs/pipelines/best-practices/caching
+[7] docs.docker.com · build · cacheDocker build cache | Docker Docs https://docs.docker.com/build/cache/
+[8] docs.docker.com › reference › dockerfileDocker Documentation https://docs.docker.com/reference/dockerfile.md
+[9] The ultimate guide to Docker build cache - Depot.dev https://depot.dev/blog/ultimate-guide-to-docker-build-cache
+[10] ultime-skill/plugins/devops/skills/docker-build-strategies/SKILL.md at main · Lucas-lux/ultime-skill https://github.com/Lucas-lux/ultime-skill/blob/main/plugins/devops/skills/docker-build-strategies/SKILL.md
+[11] Docker Build Cache Tutorial - learn.programmingline.com https://learn.programmingline.com/learn/docker/docker-build-cache
+[12] github.com › optimize-docker-build-cache › SKILLagent-almanac/skills/optimize-docker-build-cache/SKILL.md at ... https://github.com/pjt222/agent-almanac/blob/main/skills/optimize-docker-build-cache/SKILL.md
+[13] learn.programmingline.com · learn · dockerDocker Layer Caching in CI - learn.programmingline.com https://learn.programmingline.com/learn/docker/docker-cicd-layer-caching
+[14] Dockerfile layer caching: order matters more than you think https://secopslog.com/blog/dockerfile-cache/
