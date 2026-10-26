@@ -1,0 +1,191 @@
+Data Vault
+
+# Data Vault
+
+**Data Vault** คือแนวทาง modeling สำหรับ enterprise warehouse ที่แยกข้อมูลเป็น **Hub** (business key), **Link** (ความสัมพันธ์) และ **Satellite** (attribute + history) เพื่อรองรับ **multi-source, auditability และ schema change** ได้ดี [3863][3864][3866]
+
+## Core Components
+
+```text
+Hub ← Link → Hub
+        ↓
+    Satellite
+```
+
+| Component | ใช้ทำอะไร |
+|---|---|
+| **Hub** [3864][3866] | Business key [3864][3866] |
+| **Link** [3864][3866] | Relationship [3864][3866] |
+| **Satellite** [3864][3866] | Attribute + history [3864][3866] |
+| **Hash key** [3866][3872] | Deterministic key [3866][3872] |
+
+ใช้ 3 component นี้เพื่อ modeling [3864][3866][3863]
+
+## Hub
+
+```sql
+CREATE TABLE hub_customer (
+  customer_hk CHAR(64) PRIMARY KEY,
+  customer_id VARCHAR(50) NOT NULL,
+  load_ts TIMESTAMP NOT NULL,
+  record_source VARCHAR(100) NOT NULL
+);
+```
+
+| หลักการ | ใช้ทำอะไร |
+|---|---|
+| **Business key** [3864][3868] | Unique [3864][3868] |
+| **Hash key** [3866][3872] | Deterministic [3866][3872] |
+| **Insert-only** [3864][3873] | Audit [3864][3873] |
+| **Source metadata** [3864][3868] | Lineage [3864][3868] |
+
+ใช้ hub เพื่อ identity [3864][3866][3868]
+
+## Link
+
+```sql
+CREATE TABLE link_customer_order (
+  customer_order_hk CHAR(64) PRIMARY KEY,
+  customer_hk CHAR(64) NOT NULL,
+  order_hk CHAR(64) NOT NULL,
+  load_ts TIMESTAMP NOT NULL,
+  record_source VARCHAR(100) NOT NULL
+);
+```
+
+| หลักการ | ใช้ทำอะไร |
+|---|---|
+| **Many-to-many** [3864][3866] | Relationship [3864][3866] |
+| **Composite hash** [3866][3868] | Unique [3866][3868] |
+| **Insert-only** [3864][3873] | Audit [3864][3873] |
+| **No attribute** [3864][3866] | แยก satellite [3864][3866] |
+
+ใช้ link เพื่อ relationship [3864][3866][3868]
+
+## Satellite
+
+```sql
+CREATE TABLE sat_customer_profile (
+  customer_hk CHAR(64) NOT NULL,
+  load_ts TIMESTAMP NOT NULL,
+  name VARCHAR(200),
+  email VARCHAR(200),
+  country VARCHAR(50),
+  record_source VARCHAR(100),
+  PRIMARY KEY (customer_hk, load_ts)
+);
+```
+
+| หลักการ | ใช้ทำอะไร |
+|---|---|
+| **Descriptive** [3864][3866] | Attribute [3864][3866] |
+| **History** [3864][3873] | Type 2 [3864][3873] |
+| **Split by source** [3867][3869] | กัน mix [3867][3869] |
+| **Split by rate of change** [3867][3869] | Performance [3867][3869] |
+
+ใช้ satellite เพื่อ context [3864][3866][3867]
+
+## Hash Key
+
+```sql
+SHA256(CONCAT_WS('|', UPPER(TRIM(customer_id))))
+```
+
+| หลักการ | ใช้ทำอะไร |
+|---|---|
+| **Deterministic** [3866][3872] | Parallel load [3866][3872] |
+| **Standardized** [3866][3868] | Consistent [3866][3868] |
+| **No sequence** [3866][3872] | Decentralized [3866][3872] |
+| **Collation-safe** [3866][3868] | กัน collision [3866][3868] |
+
+ใช้ hash key เพื่อ integration [3866][3872][3868]
+
+## Loading Order
+
+```text
+Hub → Link → Satellite
+```
+
+| Step | ใช้ทำอะไร |
+|---|---|
+| **Load hub** [3864][3870] | สร้าง key [3864][3870] |
+| **Load link** [3864][3870] | ผูก relationship [3864][3870] |
+| **Load satellite** [3864][3870] | ใส่ attribute [3864][3870] |
+| **Parallel load** [3863][3864] | Speed [3863][3864] |
+
+ใช้ loading order เพื่อ correctness [3864][3870][3863]
+
+## Business Vault
+
+```text
+Raw Vault → Business Vault → Information Mart
+```
+
+| Layer | ใช้ทำอะไร |
+|---|---|
+| **Raw Vault** [3863][3866] | Audit [3863][3866] |
+| **Business Vault** [3863][3866] | Calculation [3863][3866] |
+| **Information Mart** [3863][3866] | BI / star [3863][3866] |
+
+ใช้ layer นี้เพื่อ serve [3863][3866][3864]
+
+## Best Practices
+
+1. **ใช้ business key ที่เสถียร** [3868][3864][3866]
+2. **ใช้ hash key** [3866][3872][3868]
+3. **ใช้ insert-only** [3864][3873][3866]
+4. **ใช้ satellite แยก source** [3867][3869][3864]
+5. **ใช้ satellite แยก rate of change** [3867][3869][3864]
+6. **ใช้ loading order** [3864][3870][3863]
+7. **ใช้ parallel load** [3863][3864][3872]
+8. **ใช้ business vault** [3863][3866][3864]
+9. **ใช้ information mart** [3863][3866][3864]
+10. **ทบทวน model เป็นรอบ** [3863][3866][3864]
+
+## Anti-Patterns
+
+| Anti-pattern | ปัญหา | ทางแก้ |
+|---|---|---|
+| Business key ไม่เสถียร | Duplicate [3868][3864] | ใช้ stable key |
+| Sequence key | Parallel ยาก [3866][3872] | ใช้ hash |
+| Attribute ใน link | ผิดหลัก [3864][3866] | ย้าย satellite |
+| Satellite รวม source | Mix data [3867][3869] | แยก source |
+| ไม่มี history | Audit ไม่ได้ [3864][3873] | ใช้ insert-only |
+
+## Checklist
+
+- [ ] มี hub
+- [ ] มี link
+- [ ] มี satellite
+- [ ] มี hash key
+- [ ] มี business key
+- [ ] มี insert-only
+- [ ] มี loading order
+- [ ] มี business vault
+- [ ] มี information mart
+- [ ] ทบทวน model
+
+## Related Notes
+
+- [[MOC - Platform Engineering]]
+- [[Data Modeling]]
+- [[Dimensional Modeling]]
+- [[Data Engineering]]
+- [[MOC - Obsidian]]
+
+การอ้างอิง:
+[1] www.ltm.com · uploads · 2025Data Vault 2 - ltm.com https://www.ltm.com/uploads/2025/12/Data-Vault-2.0.pdf
+[2] kestra.io › resources › dataData Vault Modeling: Architecture & Orchestration | Kestra https://kestra.io/resources/data/data-vault
+[3] [PDF] Data Vault 2.0 Automation Solutions for Commercial Use - Trepo https://trepo.tuni.fi/bitstream/handle/10024/123026/LaukkanenJenni.pdf?sequence=2&isAllowed=y
+[4] Data Vault Best practice & Implementation on the Lakehouse https://www.databricks.com/blog/data-vault-best-practice-implementation-lakehouse
+[5] Data vault modeling - Wikipedia https://en.wikipedia.org/wiki/Data_vault_modeling
+[6] [PDF] building a scalable data warehouse with data vault 20 - www .ec -undp https://www.ec-undp-electoralassistance.org/filedownload.ashx/form-library/LrDEWM/Building%20A%20Scalable%20Data%20Warehouse%20With%20Data%20Vault%2020.pdf
+[7] What Is Data Vault? Architecture & Modeling https://www.puppygraph.com/learn/what-is-data-vault
+[8] Data Vault Modeling https://peliqan.io/blog/data-vault-modeling/
+[9] How to implement Data Vault model | Mantel | Make things better https://mantelgroup.com.au/how-to-implement-data-vault-model/
+[10] Modelling Microsoft Dynamics 365 Data Using Data Vault 2.0 https://techcommunity.microsoft.com/blog/analyticsonazure/modelling-microsoft-dynamics-365-data-using-data-vault-2-0/4058196
+[11] Data Vault Series 5 – Loading Practices - Dataversity https://www.dataversity.net/articles/data-vault-series-5-loading-practices/
+[12] Data Vault 2.0 · Data Modeling https://datavidhya.com/learn/data-modeling/modern-approaches/data-vault/
+[13] datadriven.io › data-modeling › data-vaultData Vault Modeling for Data Engineer Interviews https://datadriven.io/data-modeling/data-vault
+[14] data-vault-2-guide/README.md at main · Mitz619/data ... - GitHub https://github.com/Mitz619/data-vault-2-guide/blob/main/README.md
+[15] DATA VAULT MODELING GUIDE http://dvstandards.com/wp-content/uploads/2021/02/data_vault_modeling_guide_2019_v3.pdf
